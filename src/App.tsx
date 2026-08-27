@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 
 type AppMode = "home" | "editing" | "teleprompter";
 type Theme = "dark" | "light" | "contrast";
-
 type FontFamily =
   | "inter"
   | "dm-sans"
@@ -10,7 +9,6 @@ type FontFamily =
   | "roboto-slab"
   | "lora"
   | "jetbrains";
-
 type Alignment = "left" | "center";
 
 type Script = {
@@ -38,30 +36,20 @@ function App() {
   const [activeScriptId, setActiveScriptId] =
     useState<string | null>(null);
 
-  const [showNewScript, setShowNewScript] =
-    useState(false);
+  const [showNewScript, setShowNewScript] = useState(false);
+  const [showRename, setShowRename] = useState(false);
 
-  const [showRename, setShowRename] =
-    useState(false);
-
-  const [newScriptTitle, setNewScriptTitle] =
-    useState("");
-
-  const [renameText, setRenameText] =
-    useState("");
+  const [newScriptTitle, setNewScriptTitle] = useState("");
+  const [renameText, setRenameText] = useState("");
 
   const [script, setScript] = useState("");
-  const [title, setTitle] =
-    useState("Untitled Script");
+  const [title, setTitle] = useState("Untitled Script");
 
   const [fontSize, setFontSize] = useState(42);
   const [speed, setSpeed] = useState(1);
 
-  const [isMirrored, setIsMirrored] =
-    useState(false);
-
-  const [theme, setTheme] =
-    useState<Theme>("dark");
+  const [isMirrored, setIsMirrored] = useState(false);
+  const [theme, setTheme] = useState<Theme>("dark");
 
   const [fontFamily, setFontFamily] =
     useState<FontFamily>("inter");
@@ -69,42 +57,26 @@ function App() {
   const [alignment, setAlignment] =
     useState<Alignment>("center");
 
-  const [isPlaying, setIsPlaying] =
-    useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  const [progress, setProgress] =
-    useState(0);
-
-  const [countdown, setCountdown] =
-    useState<number | null>(null);
-
-  const [showGuide, setShowGuide] =
-    useState(true);
-
-  const [showControls, setShowControls] =
-    useState(true);
-
+  const [showGuide, setShowGuide] = useState(true);
+  const [showControls, setShowControls] = useState(true);
   const [showMoreControls, setShowMoreControls] =
     useState(false);
 
-  const scrollRef =
-    useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const hideControlsTimer = useRef<number | null>(null);
 
-  const animationFrameRef =
-    useRef<number | null>(null);
-
-  const lastTimeRef =
-    useRef<number | null>(null);
-
-  const hideControlsTimer =
-    useRef<number | null>(null);
-
-  /* LOAD */
+  /* ─────────────────────────────
+     LOAD SCRIPTS
+  ───────────────────────────── */
 
   useEffect(() => {
     try {
-      const saved =
-        localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
 
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -114,15 +86,15 @@ function App() {
         }
       }
     } catch {
-      console.log(
-        "Unable to load scripts."
-      );
+      console.log("Unable to load scripts.");
     }
 
     setScriptsLoaded(true);
   }, []);
 
-  /* SAVE */
+  /* ─────────────────────────────
+     SAVE SCRIPTS
+  ───────────────────────────── */
 
   useEffect(() => {
     if (!scriptsLoaded) return;
@@ -133,7 +105,9 @@ function App() {
     );
   }, [scripts, scriptsLoaded]);
 
-  /* FONT */
+  /* ─────────────────────────────
+     FONT
+  ───────────────────────────── */
 
   const fontStack =
     fontFamily === "inter"
@@ -149,19 +123,14 @@ function App() {
               : "'JetBrains Mono', monospace";
 
   const fontWeight =
-    fontFamily === "jetbrains"
-      ? 400
-      : 500;
+    fontFamily === "jetbrains" ? 400 : 500;
 
-  /* AUTOSAVE */
+  /* ─────────────────────────────
+     AUTOSAVE
+  ───────────────────────────── */
 
   useEffect(() => {
-    if (
-      !activeScriptId ||
-      !scriptsLoaded
-    ) {
-      return;
-    }
+    if (!activeScriptId || !scriptsLoaded) return;
 
     setScripts((current) =>
       current.map((item) =>
@@ -194,7 +163,9 @@ function App() {
     scriptsLoaded,
   ]);
 
-  /* NEW SCRIPT */
+  /* ─────────────────────────────
+     NEW SCRIPT
+  ───────────────────────────── */
 
   const openNewScript = () => {
     setNewScriptTitle("");
@@ -203,8 +174,7 @@ function App() {
 
   const startNewScript = () => {
     const newTitle =
-      newScriptTitle.trim() ||
-      "Untitled Script";
+      newScriptTitle.trim() || "Untitled Script";
 
     const newScript: Script = {
       id: crypto.randomUUID(),
@@ -227,7 +197,6 @@ function App() {
     setActiveScriptId(newScript.id);
     setTitle(newTitle);
     setScript("");
-
     setFontSize(42);
     setSpeed(1);
     setIsMirrored(false);
@@ -240,46 +209,31 @@ function App() {
     setMode("editing");
   };
 
-  /* OPEN SCRIPT */
+  /* ─────────────────────────────
+     OPEN SCRIPT
+  ───────────────────────────── */
 
   const openScript = (item: Script) => {
     setActiveScriptId(item.id);
-
     setTitle(item.title);
     setScript(item.content);
 
-    setFontSize(
-      item.fontSize ?? 42
-    );
-
-    setSpeed(
-      item.speed ?? 1
-    );
-
-    setIsMirrored(
-      item.mirror ?? false
-    );
-
-    setTheme(
-      item.theme ?? "dark"
-    );
-
-    setFontFamily(
-      item.fontFamily ?? "inter"
-    );
-
-    setAlignment(
-      item.alignment ?? "center"
-    );
+    setFontSize(item.fontSize ?? 42);
+    setSpeed(item.speed ?? 1);
+    setIsMirrored(item.mirror ?? false);
+    setTheme(item.theme ?? "dark");
+    setFontFamily(item.fontFamily ?? "inter");
+    setAlignment(item.alignment ?? "center");
 
     setShowLanding(false);
     setMode("editing");
-
     setIsPlaying(false);
     setProgress(0);
   };
 
-  /* DELETE */
+  /* ─────────────────────────────
+     DELETE
+  ───────────────────────────── */
 
   const deleteScript = (id: string) => {
     setScripts((current) =>
@@ -288,14 +242,14 @@ function App() {
       )
     );
 
-    if (
-      activeScriptId === id
-    ) {
+    if (activeScriptId === id) {
       setActiveScriptId(null);
     }
   };
 
-  /* RENAME */
+  /* ─────────────────────────────
+     RENAME
+  ───────────────────────────── */
 
   const openRename = () => {
     setRenameText(title);
@@ -304,31 +258,31 @@ function App() {
 
   const saveRename = () => {
     const newTitle =
-      renameText.trim() ||
-      "Untitled Script";
+      renameText.trim() || "Untitled Script";
 
     setTitle(newTitle);
     setShowRename(false);
   };
 
-  /* HOME */
+  /* ─────────────────────────────
+     HOME
+  ───────────────────────────── */
 
   const goHome = () => {
     setIsPlaying(false);
-    setCountdown(null);
     setMode("home");
   };
 
-  /* TELEPROMPTER */
+  /* ─────────────────────────────
+     TELEPROMPTER
+  ───────────────────────────── */
 
   const startTeleprompter = () => {
     if (!script.trim()) return;
 
     setMode("teleprompter");
     setIsPlaying(false);
-    setCountdown(null);
     setProgress(0);
-
     setShowControls(true);
     setShowMoreControls(false);
 
@@ -341,13 +295,11 @@ function App() {
 
   const exitTeleprompter = () => {
     setIsPlaying(false);
-    setCountdown(null);
     setMode("editing");
   };
 
   const restartTeleprompter = () => {
     setIsPlaying(false);
-    setCountdown(null);
     setProgress(0);
 
     if (scrollRef.current) {
@@ -358,35 +310,9 @@ function App() {
     revealControls();
   };
 
-  /* COUNTDOWN */
-
-  const startCountdown = () => {
-    if (
-      isPlaying ||
-      countdown !== null
-    ) {
-      return;
-    }
-
-    let value = 3;
-
-    setCountdown(value);
-
-    const timer =
-      window.setInterval(() => {
-        value -= 1;
-
-        if (value <= 0) {
-          window.clearInterval(timer);
-          setCountdown(null);
-          setIsPlaying(true);
-        } else {
-          setCountdown(value);
-        }
-      }, 700);
-  };
-
-  /* CONTROLS */
+  /* ─────────────────────────────
+     CONTROLS
+  ───────────────────────────── */
 
   const revealControls = () => {
     setShowControls(true);
@@ -405,47 +331,39 @@ function App() {
     }
   };
 
-  /* AUTO SCROLL */
+  /* ─────────────────────────────
+     AUTO SCROLL
+  ───────────────────────────── */
 
   useEffect(() => {
     if (
       mode !== "teleprompter" ||
-      !isPlaying ||
-      countdown !== null
+      !isPlaying
     ) {
       lastTimeRef.current = null;
 
-      if (
-        animationFrameRef.current !== null
-      ) {
+      if (animationFrameRef.current !== null) {
         cancelAnimationFrame(
           animationFrameRef.current
         );
       }
 
-      animationFrameRef.current =
-        null;
+      animationFrameRef.current = null;
 
       return;
     }
 
-    const animate = (
-      time: number
-    ) => {
-      const container =
-        scrollRef.current;
+    const animate = (time: number) => {
+      const container = scrollRef.current;
 
       if (!container) return;
 
-      if (
-        lastTimeRef.current === null
-      ) {
+      if (lastTimeRef.current === null) {
         lastTimeRef.current = time;
       }
 
       const delta =
-        time -
-        lastTimeRef.current;
+        time - lastTimeRef.current;
 
       lastTimeRef.current = time;
 
@@ -453,8 +371,7 @@ function App() {
         42 * speed;
 
       container.scrollTop +=
-        (pixelsPerSecond * delta) /
-        1000;
+        (pixelsPerSecond * delta) / 1000;
 
       const maxScroll =
         container.scrollHeight -
@@ -465,17 +382,13 @@ function App() {
 
       const percentage =
         maxScroll > 0
-          ? (current / maxScroll) *
-            100
+          ? (current / maxScroll) * 100
           : 100;
 
       setProgress(
         Math.min(
           100,
-          Math.max(
-            0,
-            percentage
-          )
+          Math.max(0, percentage)
         )
       );
 
@@ -490,40 +403,31 @@ function App() {
       }
 
       animationFrameRef.current =
-        requestAnimationFrame(
-          animate
-        );
+        requestAnimationFrame(animate);
     };
 
     animationFrameRef.current =
-      requestAnimationFrame(
-        animate
-      );
+      requestAnimationFrame(animate);
 
     return () => {
-      if (
-        animationFrameRef.current !==
-        null
-      ) {
+      if (animationFrameRef.current !== null) {
         cancelAnimationFrame(
           animationFrameRef.current
         );
       }
 
-      animationFrameRef.current =
-        null;
-
-      lastTimeRef.current =
-        null;
+      animationFrameRef.current = null;
+      lastTimeRef.current = null;
     };
   }, [
     mode,
     isPlaying,
     speed,
-    countdown,
   ]);
 
-  /* KEYBOARD */
+  /* ─────────────────────────────
+     KEYBOARD
+  ───────────────────────────── */
 
   useEffect(() => {
     const handleKeyDown = (
@@ -533,19 +437,13 @@ function App() {
         event.target as HTMLElement;
 
       if (
-        target.tagName ===
-          "TEXTAREA" ||
-        target.tagName ===
-          "INPUT"
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "INPUT"
       ) {
         return;
       }
 
-      if (
-        mode !== "teleprompter"
-      ) {
-        return;
-      }
+      if (mode !== "teleprompter") return;
 
       if (event.code === "Space") {
         event.preventDefault();
@@ -554,56 +452,33 @@ function App() {
           setIsPlaying(false);
           setShowControls(true);
         } else {
-          startCountdown();
+          setIsPlaying(true);
+          revealControls();
         }
-
-        revealControls();
       }
 
-      if (
-        event.key.toLowerCase() ===
-        "r"
-      ) {
+      if (event.key.toLowerCase() === "r") {
         restartTeleprompter();
       }
 
-      if (
-        event.key.toLowerCase() ===
-        "m"
-      ) {
-        setIsMirrored(
-          (value) => !value
-        );
-
+      if (event.key.toLowerCase() === "m") {
+        setIsMirrored((value) => !value);
         revealControls();
       }
 
-      if (
-        event.key.toLowerCase() ===
-        "f"
-      ) {
+      if (event.key.toLowerCase() === "f") {
         toggleFullscreen();
       }
 
-      if (
-        event.key.toLowerCase() ===
-        "g"
-      ) {
-        setShowGuide(
-          (value) => !value
-        );
-
+      if (event.key.toLowerCase() === "g") {
+        setShowGuide((value) => !value);
         revealControls();
       }
 
-      if (
-        event.key.toLowerCase() ===
-        "c"
-      ) {
+      if (event.key.toLowerCase() === "c") {
         setShowMoreControls(
           (value) => !value
         );
-
         setShowControls(true);
       }
 
@@ -614,9 +489,7 @@ function App() {
           Math.min(
             3,
             Number(
-              (
-                value + 0.1
-              ).toFixed(1)
+              (value + 0.1).toFixed(1)
             )
           )
         );
@@ -624,18 +497,14 @@ function App() {
         revealControls();
       }
 
-      if (
-        event.key === "ArrowDown"
-      ) {
+      if (event.key === "ArrowDown") {
         event.preventDefault();
 
         setSpeed((value) =>
           Math.max(
             0.2,
             Number(
-              (
-                value - 0.1
-              ).toFixed(1)
+              (value - 0.1).toFixed(1)
             )
           )
         );
@@ -643,39 +512,27 @@ function App() {
         revealControls();
       }
 
-      if (
-        event.key === "ArrowLeft"
-      ) {
+      if (event.key === "ArrowLeft") {
         event.preventDefault();
 
         setFontSize((value) =>
-          Math.max(
-            24,
-            value - 2
-          )
+          Math.max(24, value - 2)
         );
 
         revealControls();
       }
 
-      if (
-        event.key === "ArrowRight"
-      ) {
+      if (event.key === "ArrowRight") {
         event.preventDefault();
 
         setFontSize((value) =>
-          Math.min(
-            80,
-            value + 2
-          )
+          Math.min(80, value + 2)
         );
 
         revealControls();
       }
 
-      if (
-        event.key === "Escape"
-      ) {
+      if (event.key === "Escape") {
         exitTeleprompter();
       }
     };
@@ -696,26 +553,27 @@ function App() {
     speed,
   ]);
 
-  /* FULLSCREEN */
+  /* ─────────────────────────────
+     FULLSCREEN
+  ───────────────────────────── */
 
-  const toggleFullscreen =
-    async () => {
-      try {
-        if (
-          !document.fullscreenElement
-        ) {
-          await document.documentElement.requestFullscreen();
-        } else {
-          await document.exitFullscreen();
-        }
-      } catch {
-        console.log(
-          "Fullscreen unavailable."
-        );
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
       }
-    };
+    } catch {
+      console.log(
+        "Fullscreen unavailable."
+      );
+    }
+  };
 
-  /* DATE */
+  /* ─────────────────────────────
+     DATE
+  ───────────────────────────── */
 
   const formatDate = (
     timestamp: number
@@ -728,24 +586,19 @@ function App() {
         difference / 60000
       );
 
-    if (minutes < 1)
-      return "Just now";
+    if (minutes < 1) return "Just now";
 
     if (minutes < 60)
       return `${minutes}m ago`;
 
     const hours =
-      Math.floor(
-        minutes / 60
-      );
+      Math.floor(minutes / 60);
 
     if (hours < 24)
       return `${hours}h ago`;
 
     const days =
-      Math.floor(
-        hours / 24
-      );
+      Math.floor(hours / 24);
 
     if (days === 1)
       return "Yesterday";
@@ -753,7 +606,9 @@ function App() {
     return `${days}d ago`;
   };
 
-  /* TELEPROMPTER THEME */
+  /* ─────────────────────────────
+     TELEPROMPTER THEME
+  ───────────────────────────── */
 
   const teleprompterBackground =
     theme === "light"
@@ -762,13 +617,13 @@ function App() {
         ? "bg-black text-white"
         : "bg-[#111110] text-white";
 
-  /* ═══════════════════════
+  /* ═════════════════════════════
      LANDING PAGE
-  ═══════════════════════ */
+  ═════════════════════════════ */
 
   if (showLanding) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F8F6F2] text-[#242321]">
+      <div className="min-h-screen bg-[#F8F6F2] text-[#242321]">
 
         <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#F8F6F2]/85 backdrop-blur-xl">
 
@@ -800,7 +655,7 @@ function App() {
 
         </header>
 
-        <main className="flex-1">
+        <main>
 
           <section className="mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-24 md:pt-24">
 
@@ -1007,16 +862,30 @@ function App() {
               <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 
                 {[
-                  ["Type", "6 carefully selected fonts"],
-                  ["Size", "24 — 80px"],
-                  ["Speed", "0.2× — 3.0×"],
-                  ["Mirror", "For glass & studio setups"],
+                  [
+                    "Type",
+                    "6 carefully selected fonts",
+                  ],
+                  [
+                    "Size",
+                    "24 — 80px",
+                  ],
+                  [
+                    "Speed",
+                    "0.2× — 3.0×",
+                  ],
+                  [
+                    "Mirror",
+                    "For glass & studio setups",
+                  ],
                 ].map(
                   ([name, description]) => (
+
                     <div
                       key={name}
                       className="rounded-2xl border border-black/[0.08] bg-white/55 p-5"
                     >
+
                       <p className="text-sm font-semibold">
                         {name}
                       </p>
@@ -1024,7 +893,9 @@ function App() {
                       <p className="mt-2 text-xs leading-5 text-black/40">
                         {description}
                       </p>
+
                     </div>
+
                   )
                 )}
 
@@ -1077,9 +948,7 @@ function App() {
 
         </main>
 
-        {/* LANDING FOOTER */}
-
-        <footer className="border-t border-black/[0.07] px-6 py-8">
+        <footer className="border-t border-black/[0.07] px-6 py-7">
 
           <div className="mx-auto flex max-w-6xl items-center justify-between">
 
@@ -1089,7 +958,7 @@ function App() {
                 ✦
               </div>
 
-              <span className="text-xs font-semibold tracking-tight">
+              <span className="text-xs font-semibold">
                 Cuetify
               </span>
 
@@ -1107,20 +976,18 @@ function App() {
     );
   }
 
-  /* ═══════════════════════
-     HOME / SCRIPTS
-  ═══════════════════════ */
+  /* ═════════════════════════════
+     HOME
+  ═════════════════════════════ */
 
   if (mode === "home") {
     return (
-      <div className="flex min-h-screen flex-col bg-[#F8F6F2] text-[#242321]">
+      <div className="min-h-screen bg-[#F8F6F2] text-[#242321]">
 
         <header className="flex items-center justify-between px-8 py-6">
 
           <button
-            onClick={() =>
-              setShowLanding(true)
-            }
+            onClick={() => setShowLanding(true)}
             className="flex items-center gap-2"
           >
 
@@ -1135,9 +1002,7 @@ function App() {
           </button>
 
           <button
-            onClick={() =>
-              setShowLanding(true)
-            }
+            onClick={() => setShowLanding(true)}
             className="rounded-xl px-4 py-2 text-sm font-medium transition hover:bg-black/5"
           >
             About
@@ -1145,7 +1010,7 @@ function App() {
 
         </header>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-8 pb-20 pt-14">
+        <main className="mx-auto max-w-5xl px-8 pb-20 pt-14">
 
           <div className="mx-auto max-w-3xl text-center">
 
@@ -1211,63 +1076,61 @@ function App() {
 
               <div className="grid gap-3 sm:grid-cols-2">
 
-                {scripts.map(
-                  (item) => (
+                {scripts.map((item) => (
 
-                    <div
-                      key={item.id}
-                      className="group relative rounded-2xl border border-black/10 bg-white p-5 transition hover:-translate-y-0.5 hover:border-black/15 hover:shadow-md"
+                  <div
+                    key={item.id}
+                    className="group relative rounded-2xl border border-black/10 bg-white p-5 transition hover:-translate-y-0.5 hover:border-black/15 hover:shadow-md"
+                  >
+
+                    <button
+                      onClick={() =>
+                        openScript(item)
+                      }
+                      className="block w-full text-left"
                     >
 
-                      <button
-                        onClick={() =>
-                          openScript(item)
-                        }
-                        className="block w-full text-left"
-                      >
+                      <div className="flex items-start gap-3">
 
-                        <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EEE9]">
+                          📄
+                        </div>
 
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0EEE9]">
-                            📄
-                          </div>
+                        <div className="min-w-0 flex-1">
 
-                          <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-sm font-semibold">
+                            {item.title}
+                          </h3>
 
-                            <h3 className="truncate text-sm font-semibold">
-                              {item.title}
-                            </h3>
-
-                            <p className="mt-1 text-xs text-black/40">
-                              {formatDate(
-                                item.updatedAt
-                              )}
-                            </p>
-
-                          </div>
+                          <p className="mt-1 text-xs text-black/40">
+                            {formatDate(
+                              item.updatedAt
+                            )}
+                          </p>
 
                         </div>
 
-                        <p className="mt-4 min-h-[40px] text-sm leading-5 text-black/45">
-                          {item.content ||
-                            "No content yet. Click to start writing."}
-                        </p>
+                      </div>
 
-                      </button>
+                      <p className="mt-4 min-h-[40px] text-sm leading-5 text-black/45">
+                        {item.content ||
+                          "No content yet. Click to start writing."}
+                      </p>
 
-                      <button
-                        onClick={() =>
-                          deleteScript(item.id)
-                        }
-                        className="absolute right-4 top-4 rounded-lg px-2 py-1 text-xs text-black/25 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
-                      >
-                        Delete
-                      </button>
+                    </button>
 
-                    </div>
+                    <button
+                      onClick={() =>
+                        deleteScript(item.id)
+                      }
+                      className="absolute right-4 top-4 rounded-lg px-2 py-1 text-xs text-black/25 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    >
+                      Delete
+                    </button>
 
-                  )
-                )}
+                  </div>
+
+                ))}
 
               </div>
 
@@ -1277,44 +1140,18 @@ function App() {
 
         </main>
 
-        {/* HOME FOOTER */}
-
-        <footer className="border-t border-black/[0.07] px-8 py-8">
-
-          <div className="mx-auto flex max-w-5xl items-center justify-between">
-
-            <div className="flex items-center gap-2">
-
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B8D8C0] text-xs">
-                ✦
-              </div>
-
-              <span className="text-xs font-semibold tracking-tight">
-                Cuetify
-              </span>
-
-            </div>
-
-            <span className="text-[10px] text-black/30">
-              Built for focus.
-            </span>
-
-          </div>
-
-        </footer>
-
-        {/* NEW SCRIPT MODAL */}
-
         {showNewScript && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6 backdrop-blur-sm"
             onClick={(event) => {
+
               if (
                 event.target ===
                 event.currentTarget
               ) {
                 setShowNewScript(false);
               }
+
             }}
           >
 
@@ -1350,20 +1187,12 @@ function App() {
                 }
                 onKeyDown={(event) => {
 
-                  if (
-                    event.key ===
-                    "Enter"
-                  ) {
+                  if (event.key === "Enter") {
                     startNewScript();
                   }
 
-                  if (
-                    event.key ===
-                    "Escape"
-                  ) {
-                    setShowNewScript(
-                      false
-                    );
+                  if (event.key === "Escape") {
+                    setShowNewScript(false);
                   }
 
                 }}
@@ -1375,9 +1204,7 @@ function App() {
 
                 <button
                   onClick={() =>
-                    setShowNewScript(
-                      false
-                    )
+                    setShowNewScript(false)
                   }
                   className="flex-1 rounded-xl bg-black/5 py-2.5 text-sm font-medium hover:bg-black/10"
                 >
@@ -1402,9 +1229,9 @@ function App() {
     );
   }
 
-  /* ═══════════════════════
+  /* ═════════════════════════════
      EDITOR
-  ═══════════════════════ */
+  ═════════════════════════════ */
 
   if (mode === "editing") {
     return (
@@ -1444,9 +1271,7 @@ function App() {
           <textarea
             value={script}
             onChange={(event) =>
-              setScript(
-                event.target.value
-              )
+              setScript(event.target.value)
             }
             autoFocus
             spellCheck
@@ -1470,9 +1295,7 @@ function App() {
             <div className="flex items-center gap-3 rounded-full border border-black/10 bg-white px-5 py-3 shadow-sm">
 
               <button
-                onClick={
-                  startTeleprompter
-                }
+                onClick={startTeleprompter}
                 disabled={!script.trim()}
                 className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-black/5 disabled:opacity-30"
               >
@@ -1483,12 +1306,8 @@ function App() {
 
               <button
                 onClick={() =>
-                  setFontSize(
-                    (value) =>
-                      Math.max(
-                        24,
-                        value - 2
-                      )
+                  setFontSize((value) =>
+                    Math.max(24, value - 2)
                   )
                 }
                 className="rounded-lg px-2 py-1 text-xs hover:bg-black/5"
@@ -1502,12 +1321,8 @@ function App() {
 
               <button
                 onClick={() =>
-                  setFontSize(
-                    (value) =>
-                      Math.min(
-                        80,
-                        value + 2
-                      )
+                  setFontSize((value) =>
+                    Math.min(80, value + 2)
                   )
                 }
                 className="rounded-lg px-2 py-1 text-xs hover:bg-black/5"
@@ -1519,14 +1334,12 @@ function App() {
                 value={fontFamily}
                 onChange={(event) =>
                   setFontFamily(
-                    event.target
-                      .value as FontFamily
+                    event.target.value as FontFamily
                   )
                 }
                 className="rounded-lg bg-black/5 px-3 py-1.5 text-xs outline-none"
                 style={{
-                  fontFamily:
-                    fontStack,
+                  fontFamily: fontStack,
                   fontWeight,
                 }}
               >
@@ -1559,9 +1372,7 @@ function App() {
 
               <button
                 onClick={() =>
-                  setIsMirrored(
-                    (value) => !value
-                  )
+                  setIsMirrored((value) => !value)
                 }
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
                   isMirrored
@@ -1577,8 +1388,6 @@ function App() {
           </div>
 
         </main>
-
-        {/* RENAME */}
 
         {showRename && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6 backdrop-blur-sm">
@@ -1603,20 +1412,12 @@ function App() {
                 }
                 onKeyDown={(event) => {
 
-                  if (
-                    event.key ===
-                    "Enter"
-                  ) {
+                  if (event.key === "Enter") {
                     saveRename();
                   }
 
-                  if (
-                    event.key ===
-                    "Escape"
-                  ) {
-                    setShowRename(
-                      false
-                    );
+                  if (event.key === "Escape") {
+                    setShowRename(false);
                   }
 
                 }}
@@ -1627,9 +1428,7 @@ function App() {
 
                 <button
                   onClick={() =>
-                    setShowRename(
-                      false
-                    )
+                    setShowRename(false)
                   }
                   className="flex-1 rounded-xl bg-black/5 py-2.5 text-sm"
                 >
@@ -1654,9 +1453,9 @@ function App() {
     );
   }
 
-  /* ═══════════════════════
+  /* ═════════════════════════════
      TELEPROMPTER
-  ═══════════════════════ */
+  ═════════════════════════════ */
 
   return (
     <div
@@ -1669,6 +1468,8 @@ function App() {
       }}
     >
 
+      {/* TOP BAR */}
+
       <div
         className={`absolute left-5 right-5 top-5 z-30 flex items-center justify-between transition-all duration-500 ${
           showControls
@@ -1678,9 +1479,7 @@ function App() {
       >
 
         <button
-          onClick={
-            exitTeleprompter
-          }
+          onClick={exitTeleprompter}
           className={`rounded-full px-4 py-2 text-sm backdrop-blur-xl ${
             theme === "light"
               ? "bg-black/5 text-black/60 hover:bg-black/10"
@@ -1701,9 +1500,7 @@ function App() {
         </div>
 
         <button
-          onClick={
-            toggleFullscreen
-          }
+          onClick={toggleFullscreen}
           className={`rounded-full px-4 py-2 text-sm backdrop-blur-xl ${
             theme === "light"
               ? "bg-black/5 text-black/60 hover:bg-black/10"
@@ -1770,8 +1567,7 @@ function App() {
               fontSize: `${fontSize}px`,
               lineHeight: 1.55,
               letterSpacing:
-                fontFamily ===
-                "jetbrains"
+                fontFamily === "jetbrains"
                   ? "0"
                   : "-0.01em",
             }}
@@ -1782,18 +1578,6 @@ function App() {
         </div>
 
       </div>
-
-      {/* COUNTDOWN */}
-
-      {countdown !== null && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-
-          <div className="animate-pulse text-8xl font-semibold">
-            {countdown}
-          </div>
-
-        </div>
-      )}
 
       {/* PROGRESS */}
 
@@ -1843,22 +1627,19 @@ function App() {
                 setIsPlaying(false);
                 setShowControls(true);
               } else {
-                startCountdown();
+                setIsPlaying(true);
+                revealControls();
               }
 
             }}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-sm transition hover:bg-current/10"
             title="Play / Pause"
           >
-            {isPlaying
-              ? "Ⅱ"
-              : "▶"}
+            {isPlaying ? "Ⅱ" : "▶"}
           </button>
 
           <button
-            onClick={
-              restartTeleprompter
-            }
+            onClick={restartTeleprompter}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-sm opacity-70 transition hover:bg-current/10 hover:opacity-100"
             title="Restart"
           >
@@ -1881,9 +1662,7 @@ function App() {
               value={speed}
               onChange={(event) =>
                 setSpeed(
-                  Number(
-                    event.target.value
-                  )
+                  Number(event.target.value)
                 )
               }
               className="w-24"
@@ -1901,12 +1680,8 @@ function App() {
 
             <button
               onClick={() =>
-                setFontSize(
-                  (value) =>
-                    Math.max(
-                      24,
-                      value - 2
-                    )
+                setFontSize((value) =>
+                  Math.max(24, value - 2)
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-lg text-xs opacity-65 hover:bg-current/10 hover:opacity-100"
@@ -1920,12 +1695,8 @@ function App() {
 
             <button
               onClick={() =>
-                setFontSize(
-                  (value) =>
-                    Math.min(
-                      80,
-                      value + 2
-                    )
+                setFontSize((value) =>
+                  Math.min(80, value + 2)
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-lg text-xs opacity-65 hover:bg-current/10 hover:opacity-100"
@@ -1975,8 +1746,7 @@ function App() {
                 value={fontFamily}
                 onChange={(event) =>
                   setFontFamily(
-                    event.target
-                      .value as FontFamily
+                    event.target.value as FontFamily
                   )
                 }
                 className={`rounded-xl px-3 py-2 text-xs outline-none ${
@@ -1985,8 +1755,7 @@ function App() {
                     : "bg-white/10"
                 }`}
                 style={{
-                  fontFamily:
-                    fontStack,
+                  fontFamily: fontStack,
                   fontWeight,
                 }}
               >
@@ -2019,18 +1788,15 @@ function App() {
 
               <button
                 onClick={() =>
-                  setAlignment(
-                    (value) =>
-                      value ===
-                      "center"
-                        ? "left"
-                        : "center"
+                  setAlignment((value) =>
+                    value === "center"
+                      ? "left"
+                      : "center"
                   )
                 }
                 className="rounded-xl px-3 py-2 text-xs opacity-70 hover:bg-current/10 hover:opacity-100"
               >
-                {alignment ===
-                "center"
+                {alignment === "center"
                   ? "Center"
                   : "Left"}
               </button>
@@ -2039,8 +1805,7 @@ function App() {
                 value={theme}
                 onChange={(event) =>
                   setTheme(
-                    event.target
-                      .value as Theme
+                    event.target.value as Theme
                   )
                 }
                 className={`rounded-xl px-3 py-2 text-xs outline-none ${
@@ -2102,8 +1867,7 @@ function App() {
       </div>
 
       {!isPlaying &&
-        progress === 0 &&
-        !countdown && (
+        progress === 0 && (
           <div
             className={`pointer-events-none absolute bottom-28 left-1/2 z-20 -translate-x-1/2 text-center text-xs transition-opacity duration-500 ${
               showControls
